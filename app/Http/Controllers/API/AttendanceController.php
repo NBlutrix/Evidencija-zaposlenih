@@ -5,56 +5,78 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Attendance;
+use Illuminate\Validation\ValidationException;
 
 class AttendanceController extends Controller
 {
     // PRIKAŽI SVE EVIDENCIJE
     public function index(Request $request)
     {
-        $query = Attendance::query();
+        try {
+            $query = Attendance::query();
 
-    // Filtriranje po korisniku
-    if ($request->has('user_id')) {
-        $query->where('user_id', $request->user_id);
-    }
+            // Filtriranje po korisniku
+            if ($request->has('user_id')) {
+                $query->where('user_id', $request->user_id);
+            }
 
-    // Filtriranje po datumu
-    if ($request->has('date')) {
-        $query->where('date', $request->date);
-    }
+            // Filtriranje po datumu
+            if ($request->has('date')) {
+                $query->where('date', $request->date);
+            }
 
-    // Filtriranje po statusu
-    if ($request->has('status')) {
-        $query->where('status', $request->status);
-    }
+            // Filtriranje po statusu
+            if ($request->has('status')) {
+                $query->where('status', $request->status);
+            }
 
-    // Sortiranje po datumu (asc ili desc)
-    $sort = $request->get('sort', 'asc'); // podrazumevano asc
-    $query->orderBy('date', $sort);
+            // Sortiranje po datumu (asc ili desc)
+            $sort = $request->get('sort', 'asc'); // podrazumevano asc
+            $query->orderBy('date', $sort);
 
-    // Eager load korisnika
-    $attendances = $query->with('user')->get();
+            // Eager load korisnika
+            $attendances = $query->with('user')->get();
 
-    return response()->json($attendances, 200);
+            return response()->json($attendances, 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Something went wrong',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     // KREIRAJ NOVU EVIDENCIJU
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'date' => 'required|date',
-            'status' => 'required|in:present,absent,leave',
-        ]);
+        try {
+            $validated = $request->validate([
+                'user_id' => 'required|exists:users,id',
+                'date' => 'required|date',
+                'status' => 'required|in:present,absent,leave',
+            ]);
 
-        $attendance = Attendance::create($validated);
-        return response()->json($attendance, 201);
+            $attendance = Attendance::create($validated);
+
+            return response()->json($attendance->load('user'), 201);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Something went wrong',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     // PRIKAŽI JEDNU EVIDENCIJU
     public function show($id)
     {
-        $attendance = Attendance::find($id);
+        $attendance = Attendance::with('user')->find($id);
+
         if (!$attendance) {
             return response()->json(['message' => 'Attendance not found'], 404);
         }
@@ -69,14 +91,27 @@ class AttendanceController extends Controller
             return response()->json(['message' => 'Attendance not found'], 404);
         }
 
-        $validated = $request->validate([
-            'user_id' => 'sometimes|exists:users,id',
-            'date' => 'sometimes|date',
-            'status' => 'sometimes|in:present,absent,leave',
-        ]);
+        try {
+            $validated = $request->validate([
+                'user_id' => 'sometimes|exists:users,id',
+                'date' => 'sometimes|date',
+                'status' => 'sometimes|in:present,absent,leave',
+            ]);
 
-        $attendance->update($validated);
-        return response()->json($attendance);
+            $attendance->update($validated);
+
+            return response()->json($attendance->load('user'));
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Something went wrong',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     // OBRIŠI EVIDENCIJU
@@ -91,3 +126,4 @@ class AttendanceController extends Controller
         return response()->json(['message' => 'Attendance deleted successfully']);
     }
 }
+
