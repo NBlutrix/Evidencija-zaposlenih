@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\User;
 
 class UserController extends Controller
 {
@@ -14,7 +15,13 @@ class UserController extends Controller
      */
     public function index()
     {
-        //
+         $users = User::with('department', 'attendances')->get();
+
+    // Vraćamo JSON odgovor
+    return response()->json([
+        'status' => 'success',
+        'data' => $users
+    ]);
     }
 
     /**
