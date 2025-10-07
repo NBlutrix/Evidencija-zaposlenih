@@ -9,9 +9,33 @@ use App\Models\Attendance;
 class AttendanceController extends Controller
 {
     // PRIKAŽI SVE EVIDENCIJE
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(Attendance::all(), 200);
+        $query = Attendance::query();
+
+    // Filtriranje po korisniku
+    if ($request->has('user_id')) {
+        $query->where('user_id', $request->user_id);
+    }
+
+    // Filtriranje po datumu
+    if ($request->has('date')) {
+        $query->where('date', $request->date);
+    }
+
+    // Filtriranje po statusu
+    if ($request->has('status')) {
+        $query->where('status', $request->status);
+    }
+
+    // Sortiranje po datumu (asc ili desc)
+    $sort = $request->get('sort', 'asc'); // podrazumevano asc
+    $query->orderBy('date', $sort);
+
+    // Eager load korisnika
+    $attendances = $query->with('user')->get();
+
+    return response()->json($attendances, 200);
     }
 
     // KREIRAJ NOVU EVIDENCIJU
