@@ -4,61 +4,66 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Attendance;
 
 class AttendanceController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
+    // PRIKAŽI SVE EVIDENCIJE
     public function index()
     {
-        //
+        return response()->json(Attendance::all(), 200);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
+    // KREIRAJ NOVU EVIDENCIJU
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'date' => 'required|date',
+            'status' => 'required|in:present,absent,leave',
+        ]);
+
+        $attendance = Attendance::create($validated);
+        return response()->json($attendance, 201);
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
+    // PRIKAŽI JEDNU EVIDENCIJU
     public function show($id)
     {
-        //
+        $attendance = Attendance::find($id);
+        if (!$attendance) {
+            return response()->json(['message' => 'Attendance not found'], 404);
+        }
+        return response()->json($attendance);
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
+    // AŽURIRAJ EVIDENCIJU
     public function update(Request $request, $id)
     {
-        //
+        $attendance = Attendance::find($id);
+        if (!$attendance) {
+            return response()->json(['message' => 'Attendance not found'], 404);
+        }
+
+        $validated = $request->validate([
+            'user_id' => 'sometimes|exists:users,id',
+            'date' => 'sometimes|date',
+            'status' => 'sometimes|in:present,absent,leave',
+        ]);
+
+        $attendance->update($validated);
+        return response()->json($attendance);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
+    // OBRIŠI EVIDENCIJU
     public function destroy($id)
     {
-        //
+        $attendance = Attendance::find($id);
+        if (!$attendance) {
+            return response()->json(['message' => 'Attendance not found'], 404);
+        }
+
+        $attendance->delete();
+        return response()->json(['message' => 'Attendance deleted successfully']);
     }
 }
