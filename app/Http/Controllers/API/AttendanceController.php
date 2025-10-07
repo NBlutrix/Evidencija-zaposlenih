@@ -35,7 +35,7 @@ class AttendanceController extends Controller
             $query->orderBy('date', $sort);
 
             // Eager load korisnika
-            $attendances = $query->with('user')->get();
+            $attendances = $query->with('user')->paginate(10);
 
             return response()->json($attendances, 200);
         } catch (\Exception $e) {

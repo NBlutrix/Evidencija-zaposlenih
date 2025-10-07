@@ -25,7 +25,7 @@ class UserController extends Controller
                 'name' => 'required|string|max:255',
                 'email' => 'required|string|email|max:255|unique:users',
                 'password' => 'required|string|min:6',
-                'role' => 'required|in:admin,employee',
+                'role' => 'required|in:admin,employee,manager',
                 'department_id' => 'sometimes|exists:departments,id',
             ]);
 
@@ -71,7 +71,7 @@ class UserController extends Controller
                 'name' => 'sometimes|string|max:255',
                 'email' => 'sometimes|string|email|max:255|unique:users,email,' . $id,
                 'password' => 'sometimes|string|min:6',
-                'role' => 'sometimes|in:admin,employee',
+                'role' => 'sometimes|in:admin,employee,manager',
                 'department_id' => 'sometimes|exists:departments,id',
             ]);
 
