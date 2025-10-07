@@ -12,7 +12,9 @@ class UserController extends Controller
     // PRIKAŽI SVE KORISNIKE
     public function index()
     {
-       return response()->json(User::all(), 200);
+       $users = User::with('department')->get();
+        return response()->json($users, 200);
+
     }
 
     // KREIRAJ NOVOG KORISNIKA
@@ -23,6 +25,7 @@ class UserController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6',
             'role' => 'required|in:admin,employee',
+            'department_id' => 'sometimes|exists:departments,id',
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
@@ -34,7 +37,8 @@ class UserController extends Controller
     // PRIKAŽI JEDNOG KORISNIKA
     public function show($id)
     {
-        $user = User::find($id);
+        $user = User::with('department')->find($id);
+
         if (!$user) {
             return response()->json(['message' => 'User not found'], 404);
         }
@@ -54,6 +58,7 @@ class UserController extends Controller
             'email' => 'sometimes|string|email|max:255|unique:users,email,' . $id,
             'password' => 'sometimes|string|min:6',
             'role' => 'sometimes|in:admin,employee',
+            'department_id' => 'sometimes|exists:departments,id',
         ]);
 
         if (isset($validated['password'])) {
