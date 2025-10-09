@@ -15,8 +15,10 @@ const LoginPage = () => {
     const res = await api.post('/login', { email, password });
 
     const token = res.data.access_token; // ispravno polje
+    const role = res.data.user?.role;
     if (token) {
       localStorage.setItem('token', token);
+      localStorage.setItem("role", role);
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       navigate('/'); 
     } else {

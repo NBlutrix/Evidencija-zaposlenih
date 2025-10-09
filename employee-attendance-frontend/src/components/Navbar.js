@@ -1,56 +1,33 @@
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
-import api from "../api/api";
+import { Link } from "react-router-dom";
 
 const Navbar = () => {
-  const navigate = useNavigate();
-  const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user"));
 
-  const handleLogout = async () => {
-    try {
-      await api.post("/logout");
-    } catch (error) {
-      console.error("Greška prilikom odjave:", error);
-    } finally {
-      localStorage.clear(); // obriši token
-      navigate("/login");   // prebaci na login stranicu
-    }
+  const logout = () => {
+    localStorage.clear();
+    window.location.href = "/login";
   };
 
   return (
-    <nav className="bg-gray-800 text-white p-4 flex justify-between items-center">
-      <Link to="/" className="text-lg font-semibold">
-        🕓 Attendance App
-      </Link>
-
-      {token ? (
-        <div className="flex gap-4 items-center">
-          <Link to="/attendances" className="hover:underline">
-            Prisustva
-          </Link>
-          <Link to="/users" className="hover:underline">
-            Korisnici
-          </Link>
-          <Link to="/departments" className="hover:underline">
-            Departmani
-          </Link>
-          <button
-            onClick={handleLogout}
-            className="bg-red-600 px-3 py-1 rounded hover:bg-red-700"
-          >
-            Odjavi se
-          </button>
-        </div>
-      ) : (
-        <div className="flex gap-4">
-          <Link to="/login" className="hover:underline">
-            Prijava
-          </Link>
-          <Link to="/register" className="hover:underline">
-            Registracija
-          </Link>
-        </div>
-      )}
+    <nav className="flex justify-between bg-gray-800 text-white p-4">
+      <div className="flex gap-4">
+        <Link to="/">Home</Link>
+        {user?.role === "admin" && (
+          <>
+            <Link to="/users">Users</Link>
+            <Link to="/departments">Departments</Link>
+          </>
+        )}
+        {user?.role === "manager" && <Link to="/users">My Department</Link>}
+        <Link to="/attendance">Attendance</Link>
+      </div>
+      <div>
+        <span className="mr-3">{user?.name}</span>
+        <button onClick={logout} className="bg-red-600 px-3 py-1 rounded">
+          Logout
+        </button>
+      </div>
     </nav>
   );
 };

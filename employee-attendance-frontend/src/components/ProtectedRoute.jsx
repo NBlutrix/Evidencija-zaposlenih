@@ -1,13 +1,16 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
 
-const ProtectedRoute = ({ children, role }) => {
+const ProtectedRoute = ({ children, allowedRoles }) => {
+  const user = JSON.parse(localStorage.getItem("user"));
   const token = localStorage.getItem("token");
-  const userRole = localStorage.getItem("role");
 
-  if (!token) return <Navigate to="/login" />;
-  if (role && userRole !== role && userRole !== "admin")
-    return <Navigate to="/" />;
+  if (!token || !user) return <Navigate to="/login" replace />;
+
+  // Ako korisnik nema dozvolu
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    return <Navigate to="/" replace />;
+  }
 
   return children;
 };
