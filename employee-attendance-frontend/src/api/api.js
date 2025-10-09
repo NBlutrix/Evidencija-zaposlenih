@@ -1,11 +1,18 @@
-import axios from 'axios';
+// src/api/api.js
+import axios from "axios";
 
 const api = axios.create({
-  baseURL: 'http://localhost:8000/api',
-  withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  baseURL: "http://127.0.0.1:8000/api",
+  withCredentials: true, // samo ako koristiš Sanctum (nije obavezno kad koristiš Bearer)
+});
+
+// Automatski dodaj token iz localStorage u svaki zahtev
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 export default api;
